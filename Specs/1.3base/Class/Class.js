@@ -207,6 +207,68 @@ describe('Class creation 1.3', {
 
 		expect(spot.say()).toEqual('NEW:animal:say:spot');
 		expect(rover.say()).toEqual('NEW:animal:say:rover');
+	},
+
+	"should allow metaclasses to alter the class definition": function(){
+		var Meta = new Class({
+			initialize: function(classDefinition){
+				this.initialized = true;
+
+				var say = classDefinition.say;
+				classDefinition.say = function(){
+					return 'meta:' + say.call(this);
+				};
+			}
+		});
+
+		var Thing = new Class({
+			Metaclass: Meta,
+			say: function(){
+				return 'thing:say:freak';
+			}
+		});
+		expect(Thing.$metaclass.initialized).toBeTruthy();
+		expect(new Thing().say()).toEqual('meta:thing:say:freak');
+	},
+
+	"should allow metaclasses to do work after the class creation": function(){
+		var Meta = new Class({
+			newClass: function(cls){
+				cls.string = 'barnicles';
+			}
+		});
+
+		var Thing = new Class({
+			Metaclass: Meta
+		});
+
+		expect(Thing.string).toEqual('barnicles');
+	},
+
+	"should allow metaclasses to mess with instance creation": function(){
+		var Meta = new Class({
+			newInstance: function(instance){
+				instance.chuck = 'norris';
+			}
+		});
+		
+		var Thing = new Class({
+			Metaclass: Meta
+		});
+		
+		expect(new Thing().chuck).toEqual('norris');
+	},
+
+	"should inherit metaclasses": function(){
+		var Meta = new Class({
+			initialize: function(classDefinition){
+				classDefinition.x = 42;
+			}
+		});
+		var A = new Class({Metaclass: Meta});
+		var B = new Class({Extends: A});
+
+		expect(new B().x).toEqual(42);
 	}
 
 });

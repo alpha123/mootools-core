@@ -25,12 +25,23 @@ var Class = this.Class = new Type('Class', function(params){
 		this.$caller = null;
 		var value = (this.initialize) ? this.initialize.apply(this, arguments) : this;
 		this.$caller = this.caller = null;
+		if (newClass.$metaclass && newClass.$metaclass.newInstance){
+		  newClass.$metaclass.newInstance(this, Array.from(arguments));
+		}
 		return value;
-	}.extend(this).implement(params);
+	};
+
+	if (Type.isClass(params.Metaclass)) newClass.$metaclass = new params.Metaclass(params);
+
+	newClass = newClass.extend(this).implement(params);
 
 	newClass.$constructor = Class;
 	newClass.prototype.$constructor = newClass;
 	newClass.prototype.parent = parent;
+
+	if (newClass.$metaclass && newClass.$metaclass.newClass){
+	  newClass.$metaclass.newClass(newClass, params);
+	}
 
 	return newClass;
 });
